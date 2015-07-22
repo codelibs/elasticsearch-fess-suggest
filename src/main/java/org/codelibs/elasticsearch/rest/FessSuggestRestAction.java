@@ -103,25 +103,24 @@ public class FessSuggestRestAction extends BaseRestHandler {
                         builder.endObject();
                         channel.sendResponse(new BytesRestResponse(OK, builder));
                     } catch (IOException e) {
-                        try {
-                            channel.sendResponse(new BytesRestResponse(channel, e));
-                        } catch (final IOException e1) {
-                            logger.error("Failed to send a failure response.", e1);
-                        }
+                        sendErrorResponse(channel, e);
                     }
                 }).error(t -> {
-                try {
-                    channel.sendResponse(new BytesRestResponse(channel, t));
-                } catch (final IOException e1) {
-                    logger.error("Failed to send a failure response.", e1);
-                }
+                sendErrorResponse(channel, t);
             });
             } catch (SuggesterException e) {
-            try {
-                channel.sendResponse(new BytesRestResponse(channel, e));
-            } catch (final IOException e1) {
-                logger.error("Failed to send a failure response.", e1);
+            sendErrorResponse(channel, e);
+        }
+    }
+
+    private void sendErrorResponse(final RestChannel channel, Throwable t) {
+        try {
+            channel.sendResponse(new BytesRestResponse(channel, t));
+            if (logger.isDebugEnabled()) {
+                logger.debug("Failed to process the request.", t);
             }
+        } catch (final IOException e1) {
+            logger.error("Failed to send a failure response.", e1);
         }
     }
 
