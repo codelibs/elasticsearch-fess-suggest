@@ -3,6 +3,7 @@ package org.codelibs.elasticsearch;
 import java.util.Collection;
 
 import org.codelibs.elasticsearch.module.FessSuggestModule;
+import org.codelibs.elasticsearch.rest.FessSuggestCreateRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestRestAction;
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.elasticsearch.common.collect.Lists;
@@ -25,6 +26,7 @@ public class FessSuggestPlugin extends AbstractPlugin {
     // for Rest API
     public void onModule(final RestModule module) {
         module.addRestAction(FessSuggestRestAction.class);
+        module.addRestAction(FessSuggestCreateRestAction.class);
     }
 
     // for Service

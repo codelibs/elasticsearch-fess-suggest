@@ -86,6 +86,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
                         builder.field("index", request.param("index"));
                         builder.field("took", r.getTookMs());
                         builder.field("total", r.getTotal());
+                        builder.field("num", r.getNum());
                         List<SuggestItem> suggestItems = r.getItems();
                         if (suggestItems.size() > 0) {
                             builder.startArray("hits");
@@ -105,9 +106,9 @@ public class FessSuggestRestAction extends BaseRestHandler {
                     } catch (IOException e) {
                         sendErrorResponse(channel, e);
                     }
-                }).error(t -> {
-                sendErrorResponse(channel, t);
-            });
+                }).error(t ->
+                sendErrorResponse(channel, t)
+            );
             } catch (SuggesterException e) {
             sendErrorResponse(channel, e);
         }
