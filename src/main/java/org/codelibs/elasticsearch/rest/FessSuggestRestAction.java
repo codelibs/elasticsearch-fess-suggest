@@ -20,6 +20,7 @@ import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestController;
 import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.threadpool.ThreadPool;
 
 public class FessSuggestRestAction extends BaseRestHandler {
 
@@ -32,10 +33,14 @@ public class FessSuggestRestAction extends BaseRestHandler {
 
     private static final String SEP_PARAM = ",";
 
+    protected final ThreadPool threadPool;
+
     @Inject
     public FessSuggestRestAction(final Settings settings, final Client client,
-            final RestController controller) {
+            final RestController controller, final ThreadPool threadPool) {
         super(settings, controller, client);
+
+        this.threadPool = threadPool;
 
         controller.registerHandler(RestRequest.Method.GET,
             "/{index}/_fsuggest", this);
@@ -46,72 +51,74 @@ public class FessSuggestRestAction extends BaseRestHandler {
     @Override
     protected void handleRequest(final RestRequest request,
             final RestChannel channel, Client client) {
-        try {
-            final String index = request.param(PARAM_INDEX);
-            final String query = request.param(PARAM_QUERY);
-            final int size = request.paramAsInt(PARAM_SIZE, 10);
-            final String tags = request.param(PARAM_TAGS);
-            final String roles = request.param(PARAM_ROLES);
-            final String fields = request.param(PARAM_FIELDS);
+        threadPool.executor(ThreadPool.Names.SUGGEST).execute( () -> {
+            try {
+                final String index = request.param(PARAM_INDEX);
+                final String query = request.param(PARAM_QUERY);
+                final int size = request.paramAsInt(PARAM_SIZE, 10);
+                final String tags = request.param(PARAM_TAGS);
+                final String roles = request.param(PARAM_ROLES);
+                final String fields = request.param(PARAM_FIELDS);
 
-            final Suggester suggester = Suggester.builder().build(client, index);
-            final SuggestRequestBuilder suggestRequestBuilder = suggester.suggest().setSize(size);
-            if(!Strings.isNullOrEmpty(query)) {
-                suggestRequestBuilder.setQuery(query);
-            }
-            if(!Strings.isNullOrEmpty(tags)) {
-                final String[] tagsArray = tags.split(SEP_PARAM);
-                for(final String tag: tagsArray) {
-                    suggestRequestBuilder.addTag(tag);
+                final Suggester suggester = Suggester.builder().build(client, index);
+                final SuggestRequestBuilder suggestRequestBuilder = suggester.suggest().setSize(size);
+                if (!Strings.isNullOrEmpty(query)) {
+                    suggestRequestBuilder.setQuery(query);
                 }
-            }
-            if(!Strings.isNullOrEmpty(roles)) {
-                final String[] rolesArray = roles.split(SEP_PARAM);
-                for(final String role: rolesArray) {
-                    suggestRequestBuilder.addRole(role);
-                }
-            }
-            if(!Strings.isNullOrEmpty(fields)) {
-                final String[] fieldsArray = fields.split(SEP_PARAM);
-                for(final String field: fieldsArray) {
-                    suggestRequestBuilder.addRole(field);
-                }
-            }
-
-            suggestRequestBuilder.execute()
-                .done(r -> {
-                    try {
-                        final XContentBuilder builder = JsonXContent.contentBuilder();
-                        builder.startObject();
-                        builder.field("index", request.param("index"));
-                        builder.field("took", r.getTookMs());
-                        builder.field("total", r.getTotal());
-                        builder.field("num", r.getNum());
-                        List<SuggestItem> suggestItems = r.getItems();
-                        if (suggestItems.size() > 0) {
-                            builder.startArray("hits");
-                            for (SuggestItem item : suggestItems) {
-                                builder.startObject();
-                                builder.field("text", item.getText());
-                                builder.array("tags", item.getTags());
-                                builder.array("roles", item.getRoles());
-                                builder.array("fields", item.getFields());
-                                builder.endObject();
-                            }
-                            builder.endArray();
-                        }
-
-                        builder.endObject();
-                        channel.sendResponse(new BytesRestResponse(OK, builder));
-                    } catch (IOException e) {
-                        sendErrorResponse(channel, e);
+                if (!Strings.isNullOrEmpty(tags)) {
+                    final String[] tagsArray = tags.split(SEP_PARAM);
+                    for (final String tag : tagsArray) {
+                        suggestRequestBuilder.addTag(tag);
                     }
-                }).error(t ->
-                sendErrorResponse(channel, t)
-            );
+                }
+                if (!Strings.isNullOrEmpty(roles)) {
+                    final String[] rolesArray = roles.split(SEP_PARAM);
+                    for (final String role : rolesArray) {
+                        suggestRequestBuilder.addRole(role);
+                    }
+                }
+                if (!Strings.isNullOrEmpty(fields)) {
+                    final String[] fieldsArray = fields.split(SEP_PARAM);
+                    for (final String field : fieldsArray) {
+                        suggestRequestBuilder.addRole(field);
+                    }
+                }
+
+                suggestRequestBuilder.execute()
+                    .done(r -> {
+                        try {
+                            final XContentBuilder builder = JsonXContent.contentBuilder();
+                            builder.startObject();
+                            builder.field("index", request.param("index"));
+                            builder.field("took", r.getTookMs());
+                            builder.field("total", r.getTotal());
+                            builder.field("num", r.getNum());
+                            List<SuggestItem> suggestItems = r.getItems();
+                            if (suggestItems.size() > 0) {
+                                builder.startArray("hits");
+                                for (SuggestItem item : suggestItems) {
+                                    builder.startObject();
+                                    builder.field("text", item.getText());
+                                    builder.array("tags", item.getTags());
+                                    builder.array("roles", item.getRoles());
+                                    builder.array("fields", item.getFields());
+                                    builder.endObject();
+                                }
+                                builder.endArray();
+                            }
+
+                            builder.endObject();
+                            channel.sendResponse(new BytesRestResponse(OK, builder));
+                        } catch (IOException e) {
+                            sendErrorResponse(channel, e);
+                        }
+                    }).error(t ->
+                        sendErrorResponse(channel, t)
+                );
             } catch (SuggesterException e) {
-            sendErrorResponse(channel, e);
-        }
+                sendErrorResponse(channel, e);
+            }
+        });
     }
 
     private void sendErrorResponse(final RestChannel channel, Throwable t) {

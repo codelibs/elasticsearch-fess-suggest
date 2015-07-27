@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.codelibs.elasticsearch.module.FessSuggestModule;
 import org.codelibs.elasticsearch.rest.FessSuggestCreateRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestRestAction;
+import org.codelibs.elasticsearch.rest.FessSuggestUpdateRestAction;
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.common.component.LifecycleComponent;
@@ -27,6 +28,7 @@ public class FessSuggestPlugin extends AbstractPlugin {
     public void onModule(final RestModule module) {
         module.addRestAction(FessSuggestRestAction.class);
         module.addRestAction(FessSuggestCreateRestAction.class);
+        module.addRestAction(FessSuggestUpdateRestAction.class);
     }
 
     // for Service
