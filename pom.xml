@@ -114,17 +114,23 @@
 			<groupId>org.codelibs.fess</groupId>
 			<artifactId>fess-suggest</artifactId>
 			<version>${fess_suggest.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-all</artifactId>
-			<version>2.4.0</version>
-			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.codelibs</groupId>
+					<artifactId>ucene-analyzers-kuromoji-ipadic-neologd</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.codelibs</groupId>
 			<artifactId>lucene-analyzers-kuromoji-ipadic-neologd</artifactId>
 			<version>4.10.4-20150501</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+			<version>2.4.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
