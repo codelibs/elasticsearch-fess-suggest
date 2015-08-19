@@ -117,7 +117,7 @@
 			<exclusions>
 				<exclusion>
 					<groupId>org.codelibs</groupId>
-					<artifactId>ucene-analyzers-kuromoji-ipadic-neologd</artifactId>
+					<artifactId>lucene-analyzers-kuromoji-ipadic-neologd</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
