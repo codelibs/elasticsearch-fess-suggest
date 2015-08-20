@@ -50,7 +50,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
 
     @Override
     protected void handleRequest(final RestRequest request,
-            final RestChannel channel, Client client) {
+            final RestChannel channel, final Client client) {
         threadPool.executor(ThreadPool.Names.SUGGEST).execute( () -> {
             try {
                 final String index = request.param(PARAM_INDEX);
@@ -88,15 +88,19 @@ public class FessSuggestRestAction extends BaseRestHandler {
                     .done(r -> {
                         try {
                             final XContentBuilder builder = JsonXContent.contentBuilder();
+                            final String pretty = request.param("pretty");
+                            if (pretty != null && !"false".equalsIgnoreCase(pretty)) {
+                                builder.prettyPrint().lfAtEnd();
+                            }
                             builder.startObject();
                             builder.field("index", request.param("index"));
                             builder.field("took", r.getTookMs());
                             builder.field("total", r.getTotal());
                             builder.field("num", r.getNum());
-                            List<SuggestItem> suggestItems = r.getItems();
+                            final List<SuggestItem> suggestItems = r.getItems();
                             if (suggestItems.size() > 0) {
                                 builder.startArray("hits");
-                                for (SuggestItem item : suggestItems) {
+                                for (final SuggestItem item : suggestItems) {
                                     builder.startObject();
                                     builder.field("text", item.getText());
                                     builder.array("tags", item.getTags());
@@ -109,26 +113,26 @@ public class FessSuggestRestAction extends BaseRestHandler {
 
                             builder.endObject();
                             channel.sendResponse(new BytesRestResponse(OK, builder));
-                        } catch (IOException e) {
+                        } catch (final IOException e) {
                             sendErrorResponse(channel, e);
                         }
                     }).error(t ->
                         sendErrorResponse(channel, t)
                 );
-            } catch (SuggesterException e) {
+            } catch (final SuggesterException e) {
                 sendErrorResponse(channel, e);
             }
         });
     }
 
-    private void sendErrorResponse(final RestChannel channel, Throwable t) {
+    private void sendErrorResponse(final RestChannel channel, final Throwable t) {
         try {
-            channel.sendResponse(new BytesRestResponse(channel, t));
             if (logger.isDebugEnabled()) {
                 logger.debug("Failed to process the request.", t);
             }
-        } catch (final IOException e1) {
-            logger.error("Failed to send a failure response.", e1);
+            channel.sendResponse(new BytesRestResponse(channel, t));
+        } catch (final IOException e) {
+            logger.error("Failed to send a failure response.", e);
         }
     }
 

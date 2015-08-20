@@ -1,6 +1,13 @@
 package org.codelibs.elasticsearch.rest;
 
+import static org.elasticsearch.rest.RestStatus.OK;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.codelibs.fess.suggest.Suggester;
+import org.codelibs.fess.suggest.core.lang.StringUtil;
 import org.codelibs.fess.suggest.index.SuggestIndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.base.Strings;
@@ -9,16 +16,13 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.elasticsearch.rest.*;
+import org.elasticsearch.rest.BaseRestHandler;
+import org.elasticsearch.rest.BytesRestResponse;
+import org.elasticsearch.rest.RestChannel;
+import org.elasticsearch.rest.RestController;
+import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.threadpool.ThreadPool;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.elasticsearch.rest.RestStatus.OK;
 
 public class FessSuggestUpdateRestAction extends BaseRestHandler {
     public static final String PARAM_INDEX = "index";
@@ -41,7 +45,7 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleRequest(RestRequest restRequest, RestChannel restChannel, Client client) throws Exception {
+    protected void handleRequest(final RestRequest restRequest, final RestChannel restChannel, final Client client) throws Exception {
         threadPool.executor(ThreadPool.Names.SUGGEST).execute(() -> {
             try {
                 final String indexId = restRequest.param(PARAM_INDEX);
@@ -59,50 +63,63 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
                     return;
                 }
 
-                final List<String> fields;
-                final List<String> tags;
-                final List<String> roles;
+                final String[] fields;
+                final String[] tags;
+                final String[] roles;
 
                 final Object fieldsObj = requestMap.get("fields");
-                if(fieldsObj != null && fieldsObj instanceof List) {
-                    fields = (List)fieldsObj;
+                if(fieldsObj instanceof List) {
+                    fields = ((List<String>)fieldsObj).stream().toArray(n->new String[n]);
                 } else {
-                    fields = new ArrayList<>();
+                    fields = StringUtil.EMPTY_STRINGS;
                 }
 
                 final Object tagsObj = requestMap.get("tags");
-                if(tagsObj != null && tagsObj instanceof List) {
-                    tags = (List)tagsObj;
+                if(tagsObj instanceof List) {
+                    tags = ((List<String>)tagsObj).stream().toArray(n->new String[n]);
                 } else {
-                    tags = new ArrayList<>();
+                    tags = StringUtil.EMPTY_STRINGS;
                 }
 
                 final Object rolesObj = requestMap.get("roles");
-                if(rolesObj != null && rolesObj instanceof List) {
-                    roles = (List)rolesObj;
+                if(rolesObj instanceof List) {
+                    roles = ((List<String>)rolesObj).stream().toArray(n->new String[n]);
                 } else {
-                    roles = new ArrayList<>();
+                    roles = StringUtil.EMPTY_STRINGS;
                 }
 
                 final SuggestIndexResponse suggestIndexResponse = suggester.indexer()
                     .indexFromSearchWord(
                         keyword.toString(),
-                        fields.toArray(new String[fields.size()]),
-                        tags.toArray(new String[tags.size()]),
-                        roles.toArray(new String[roles.size()]),
+                        fields,
+                        tags,
+                        roles,
                         1);
                 suggestIndexResponse.getTook();
                 final XContentBuilder builder = JsonXContent.contentBuilder();
+                final String pretty = restRequest.param("pretty");
+                if (pretty != null && !"false".equalsIgnoreCase(pretty)) {
+                    builder.prettyPrint().lfAtEnd();
+                }
                 builder.startObject();
                 builder.field("took", suggestIndexResponse.getTook());
                 builder.field("acknowledged", true);
                 builder.endObject();
                 restChannel.sendResponse(new BytesRestResponse(OK, builder));
-            } catch (Throwable t) {
-                StringWriter sw = new StringWriter();
-                t.printStackTrace(new PrintWriter(sw));
-                restChannel.sendResponse(new BytesRestResponse(OK, sw.toString()));
+            } catch (final Throwable t) {
+                sendErrorResponse(restChannel, t);
             }
         });
+    }
+
+    private void sendErrorResponse(final RestChannel channel, final Throwable t) {
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Failed to process the request.", t);
+            }
+            channel.sendResponse(new BytesRestResponse(channel, t));
+        } catch (final IOException e) {
+            logger.error("Failed to send a failure response.", e);
+        }
     }
 }

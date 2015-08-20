@@ -114,12 +114,6 @@
 			<groupId>org.codelibs.fess</groupId>
 			<artifactId>fess-suggest</artifactId>
 			<version>${fess_suggest.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.codelibs</groupId>
-					<artifactId>lucene-analyzers-kuromoji-ipadic-neologd</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.codelibs</groupId>
