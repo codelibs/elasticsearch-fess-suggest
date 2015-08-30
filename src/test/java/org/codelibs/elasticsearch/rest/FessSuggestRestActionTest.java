@@ -24,6 +24,7 @@ public class FessSuggestRestActionTest {
             settingsBuilder.put("index.number_of_replicas", 0);
             settingsBuilder.put("script.disable_dynamic", false);
             settingsBuilder.put("script.groovy.sandbox.enabled", true);
+            settingsBuilder.put("fsuggest.ngquery", "k,ken");
         }).build(newConfigs().ramIndexStore().numOfNode(1));
         runner.ensureYellow();
     }
@@ -49,7 +50,7 @@ public class FessSuggestRestActionTest {
         final int docNum = 10;
 
         Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
-        for(int i=0;i<docNum;i++) {
+        for (int i = 0; i < docNum; i++) {
             Curl.post(runner.masterNode(), "fess/_fsuggest/update").body(
                 "{\n" +
                     "\"keyword\" : \"検索" + i + " エンジン" + "\",\n" +
@@ -80,5 +81,32 @@ public class FessSuggestRestActionTest {
         CurlResponse response5 = Curl.get(runner.masterNode(), "fess/_fsuggest")
             .param("q", "けんさく").param("roles", "role1").execute();
         assertEquals(docNum, (int) response5.getContentAsMap().get("total"));
+    }
+
+    @Test
+    public void test_ngQuery() throws Exception {
+        Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
+        Curl.post(runner.masterNode(), "fess/_fsuggest/update").body(
+            "{\n" +
+                "\"keyword\" : \"検索エンジン\",\n" +
+                "\"fields\" : [\"aaa\", \"bbb\"],\n" +
+                "\"tags\" : [\"tag1\", \"tag2\"],\n" +
+                "\"roles\" : [\"role1\", \"role2\"]\n" +
+                "}"
+        ).execute();
+        runner.refresh();
+
+        CurlResponse response1 = Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "ke").param("roles", "role1").execute();
+        assertEquals(1, (int) response1.getContentAsMap().get("total"));
+
+        CurlResponse response2 = Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "k").param("roles", "role1").execute();
+        assertEquals(0, (int) response2.getContentAsMap().get("total"));
+
+        CurlResponse response3 = Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "ken").param("roles", "role1").execute();
+        assertEquals(0, (int) response3.getContentAsMap().get("total"));
+
     }
 }

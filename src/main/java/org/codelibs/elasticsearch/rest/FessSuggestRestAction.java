@@ -3,7 +3,10 @@ package org.codelibs.elasticsearch.rest;
 import static org.elasticsearch.rest.RestStatus.OK;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.entity.SuggestItem;
@@ -31,9 +34,13 @@ public class FessSuggestRestAction extends BaseRestHandler {
     public static final String PARAM_ROLES = "roles";
     public static final String PARAM_FIELDS = "fields";
 
+    public static final String SETTINGS_NGWORD_KEY = "fsuggest.ngquery";
+
     private static final String SEP_PARAM = ",";
 
     protected final ThreadPool threadPool;
+
+    protected final Set<String> ngQueries;
 
     @Inject
     public FessSuggestRestAction(final Settings settings, final Client client,
@@ -41,6 +48,8 @@ public class FessSuggestRestAction extends BaseRestHandler {
         super(settings, controller, client);
 
         this.threadPool = threadPool;
+
+        this.ngQueries = getNgQuerySet(settings);
 
         controller.registerHandler(RestRequest.Method.GET,
             "/{index}/_fsuggest", this);
@@ -59,6 +68,26 @@ public class FessSuggestRestAction extends BaseRestHandler {
                 final String tags = request.param(PARAM_TAGS);
                 final String roles = request.param(PARAM_ROLES);
                 final String fields = request.param(PARAM_FIELDS);
+
+                if(isNgQuery(query)) {
+                    try {
+                        final XContentBuilder builder = JsonXContent.contentBuilder();
+                        final String pretty = request.param("pretty");
+                        if (pretty != null && !"false".equalsIgnoreCase(pretty)) {
+                            builder.prettyPrint().lfAtEnd();
+                        }
+                        builder.startObject();
+                        builder.field("index", request.param("index"));
+                        builder.field("took", 0);
+                        builder.field("total", 0);
+                        builder.field("num", 0);
+                        builder.endObject();
+                        channel.sendResponse(new BytesRestResponse(OK, builder));
+                    } catch (IOException e) {
+                        sendErrorResponse(channel, e);
+                    }
+                    return;
+                }
 
                 final Suggester suggester = Suggester.builder().build(client, index);
                 final SuggestRequestBuilder suggestRequestBuilder = suggester.suggest().setSize(size);
@@ -134,6 +163,27 @@ public class FessSuggestRestAction extends BaseRestHandler {
         } catch (final IOException e) {
             logger.error("Failed to send a failure response.", e);
         }
+    }
+
+    private boolean isNgQuery(final String query) {
+        return ngQueries.contains(query);
+    }
+
+    private Set<String> getNgQuerySet(final Settings settings) {
+        final Set<String> ngQueries = Collections.synchronizedSet(new HashSet<String>());
+        final String value = settings.get(SETTINGS_NGWORD_KEY);
+        if(Strings.isNullOrEmpty(value)) {
+            return ngQueries;
+        }
+
+        final String[] values = value.split(",");
+        for(final String ngQuery: values) {
+            if(ngQuery.length() == 0) {
+                continue;
+            }
+            ngQueries.add(ngQuery);
+        }
+        return ngQueries;
     }
 
 }
