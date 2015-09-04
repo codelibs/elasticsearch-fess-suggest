@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<name>elasticsearch-fess-suggest</name>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codelibs</groupId>
 	<artifactId>elasticsearch-fess-suggest</artifactId>
-	<version>1.7.0-SNAPSHOT</version>
+	<version>1.7.0</version>
 	<packaging>jar</packaging>
 	<description>elasticsearch elasticsearch-fess-suggest plugin</description>
 	<inceptionYear>2015</inceptionYear>
@@ -28,7 +27,7 @@
 	</parent>
 	<properties>
 		<elasticsearch.version>1.7.1</elasticsearch.version>
-		<fess_suggest.version>2.0.0-SNAPSHOT</fess_suggest.version>
+		<fess_suggest.version>2.0.0-beta1</fess_suggest.version>
 	</properties>
 	<repositories>
 		<repository>
