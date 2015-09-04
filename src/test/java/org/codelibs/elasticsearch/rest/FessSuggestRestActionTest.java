@@ -62,6 +62,10 @@ public class FessSuggestRestActionTest {
         }
         runner.refresh();
 
+        CurlResponse response0 = Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "").param("roles", "role1").execute();
+        assertEquals(0, (int) response0.getContentAsMap().get("total"));
+
         CurlResponse response1 = Curl.get(runner.masterNode(), "fess/_fsuggest")
             .param("q", "検索").param("roles", "role1").execute();
         assertEquals(docNum, (int) response1.getContentAsMap().get("total"));

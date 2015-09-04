@@ -69,7 +69,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
                 final String roles = request.param(PARAM_ROLES);
                 final String fields = request.param(PARAM_FIELDS);
 
-                if(isNgQuery(query)) {
+                if(Strings.isNullOrEmpty(query) || isNgQuery(query)) {
                     try {
                         final XContentBuilder builder = JsonXContent.contentBuilder();
                         final String pretty = request.param("pretty");
