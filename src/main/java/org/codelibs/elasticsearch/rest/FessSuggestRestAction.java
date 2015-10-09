@@ -122,7 +122,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
                                 builder.prettyPrint().lfAtEnd();
                             }
                             builder.startObject();
-                            builder.field("index", request.param("index"));
+                            builder.field("index", r.getIndex());
                             builder.field("took", r.getTookMs());
                             builder.field("total", r.getTotal());
                             builder.field("num", r.getNum());
