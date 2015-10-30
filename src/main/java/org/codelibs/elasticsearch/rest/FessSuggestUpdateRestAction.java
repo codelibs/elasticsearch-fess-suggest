@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.core.lang.StringUtil;
 import org.codelibs.fess.suggest.index.SuggestIndexResponse;
@@ -29,13 +30,17 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
 
     protected final ThreadPool threadPool;
 
+    protected final FessSuggestService fessSuggestService;
+
 
     @Inject
     public FessSuggestUpdateRestAction(final Settings settings, final Client client,
-                                       final RestController controller, final ThreadPool threadPool) {
+                                       final RestController controller, final ThreadPool threadPool, final FessSuggestService fessSuggestService) {
         super(settings, controller, client);
 
         this.threadPool = threadPool;
+
+        this.fessSuggestService = fessSuggestService;
 
         controller.registerHandler(RestRequest.Method.POST,
             "/{index}/_fsuggest/update", this);

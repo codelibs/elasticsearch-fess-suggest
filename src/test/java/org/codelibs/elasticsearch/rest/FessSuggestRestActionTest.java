@@ -113,4 +113,24 @@ public class FessSuggestRestActionTest {
         assertEquals(0, (int) response3.getContentAsMap().get("total"));
 
     }
+
+    @Test
+    public void test_famousKeys() throws Exception {
+        final int docNum = 10;
+
+        Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
+        for (int i = 0; i < docNum; i++) {
+            Curl.post(runner.masterNode(), "fess/_fsuggest/update").body(
+                "{\n" +
+                    "\"keyword\" : \"検索" + i + "\",\n" +
+                    "\"fields\" : [\"aaa\", \"bbb\"]\n" +
+                    "}"
+            ).execute();
+        }
+        runner.refresh();
+
+        CurlResponse response = Curl.get(runner.masterNode(), "fess/_famouskeys")
+            .execute();
+        assertEquals(10, response.getContentAsMap().get("total"));
+    }
 }

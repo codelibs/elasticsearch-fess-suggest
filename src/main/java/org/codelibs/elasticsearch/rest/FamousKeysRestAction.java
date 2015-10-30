@@ -1,124 +1,88 @@
 package org.codelibs.elasticsearch.rest;
 
-import static org.elasticsearch.rest.RestStatus.OK;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.entity.SuggestItem;
 import org.codelibs.fess.suggest.exception.SuggesterException;
-import org.codelibs.fess.suggest.request.suggest.SuggestRequestBuilder;
+import org.codelibs.fess.suggest.request.famouskeys.FamousKeysRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
-import org.elasticsearch.rest.BaseRestHandler;
-import org.elasticsearch.rest.BytesRestResponse;
-import org.elasticsearch.rest.RestChannel;
-import org.elasticsearch.rest.RestController;
-import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.rest.*;
 import org.elasticsearch.threadpool.ThreadPool;
 
-public class FessSuggestRestAction extends BaseRestHandler {
+import java.io.IOException;
+import java.util.List;
+
+import static org.elasticsearch.rest.RestStatus.OK;
+
+public class FamousKeysRestAction extends BaseRestHandler {
 
     public static final String PARAM_INDEX = "index";
-    public static final String PARAM_QUERY = "q";
+    public static final String PARAM_WINDOW_SIZE = "window_size";
     public static final String PARAM_SIZE = "size";
     public static final String PARAM_TAGS = "tags";
     public static final String PARAM_ROLES = "roles";
     public static final String PARAM_FIELDS = "fields";
 
-    public static final String SETTINGS_NGWORD_KEY = "fsuggest.ngquery";
-
     private static final String SEP_PARAM = ",";
 
     protected final ThreadPool threadPool;
 
-    protected final Set<String> ngQueries;
-
     protected final FessSuggestService fessSuggestService;
 
     @Inject
-    public FessSuggestRestAction(final Settings settings, final Client client,
-            final RestController controller, final ThreadPool threadPool, final FessSuggestService fessSuggestService) {
+    public FamousKeysRestAction(final Settings settings, final Client client,
+                                 final RestController controller, final ThreadPool threadPool, final FessSuggestService fessSuggestService) {
         super(settings, controller, client);
 
         this.threadPool = threadPool;
 
-        this.ngQueries = getNgQuerySet(settings);
-
         this.fessSuggestService = fessSuggestService;
 
         controller.registerHandler(RestRequest.Method.GET,
-            "/{index}/_fsuggest", this);
+            "/{index}/_famouskeys", this);
         controller.registerHandler(RestRequest.Method.GET,
-            "/{index}/{type}/_fsuggest", this);
+            "/{index}/{type}/_famouskeys", this);
     }
 
     @Override
     protected void handleRequest(final RestRequest request,
-            final RestChannel channel, final Client client) {
-        threadPool.executor(ThreadPool.Names.SUGGEST).execute( () -> {
+                                 final RestChannel channel, final Client client) {
+        threadPool.executor(ThreadPool.Names.SUGGEST).execute(() -> {
             try {
                 final String index = request.param(PARAM_INDEX);
-                final String query = request.param(PARAM_QUERY);
                 final int size = request.paramAsInt(PARAM_SIZE, 10);
+                final int windowSize = request.paramAsInt(PARAM_WINDOW_SIZE, 20);
                 final String tags = request.param(PARAM_TAGS);
                 final String roles = request.param(PARAM_ROLES);
                 final String fields = request.param(PARAM_FIELDS);
 
-                if(Strings.isNullOrEmpty(query) || isNgQuery(query)) {
-                    try {
-                        final XContentBuilder builder = JsonXContent.contentBuilder();
-                        final String pretty = request.param("pretty");
-                        if (pretty != null && !"false".equalsIgnoreCase(pretty)) {
-                            builder.prettyPrint().lfAtEnd();
-                        }
-                        builder.startObject();
-                        builder.field("index", request.param("index"));
-                        builder.field("took", 0);
-                        builder.field("total", 0);
-                        builder.field("num", 0);
-                        builder.endObject();
-                        channel.sendResponse(new BytesRestResponse(OK, builder));
-                    } catch (IOException e) {
-                        sendErrorResponse(channel, e);
-                    }
-                    return;
-                }
-
                 final Suggester suggester = fessSuggestService.suggester(index);
-                final SuggestRequestBuilder suggestRequestBuilder = suggester.suggest().setSize(size);
-                if (!Strings.isNullOrEmpty(query)) {
-                    suggestRequestBuilder.setQuery(query);
-                }
+                final FamousKeysRequestBuilder famousKeysRequestBuilder = suggester.famousKeys().setSize(size);
                 if (!Strings.isNullOrEmpty(tags)) {
                     final String[] tagsArray = tags.split(SEP_PARAM);
                     for (final String tag : tagsArray) {
-                        suggestRequestBuilder.addTag(tag);
+                        famousKeysRequestBuilder.addTag(tag);
                     }
                 }
                 if (!Strings.isNullOrEmpty(roles)) {
                     final String[] rolesArray = roles.split(SEP_PARAM);
                     for (final String role : rolesArray) {
-                        suggestRequestBuilder.addRole(role);
+                        famousKeysRequestBuilder.addRole(role);
                     }
                 }
                 if (!Strings.isNullOrEmpty(fields)) {
                     final String[] fieldsArray = fields.split(SEP_PARAM);
                     for (final String field : fieldsArray) {
-                        suggestRequestBuilder.addField(field);
+                        famousKeysRequestBuilder.addRole(field);
                     }
                 }
 
-                suggestRequestBuilder.execute()
+                famousKeysRequestBuilder.execute()
                     .done(r -> {
                         try {
                             final XContentBuilder builder = JsonXContent.contentBuilder();
@@ -169,26 +133,4 @@ public class FessSuggestRestAction extends BaseRestHandler {
             logger.error("Failed to send a failure response.", e);
         }
     }
-
-    private boolean isNgQuery(final String query) {
-        return ngQueries.contains(query);
-    }
-
-    private Set<String> getNgQuerySet(final Settings settings) {
-        final Set<String> ngQueries = Collections.synchronizedSet(new HashSet<String>());
-        final String value = settings.get(SETTINGS_NGWORD_KEY);
-        if(Strings.isNullOrEmpty(value)) {
-            return ngQueries;
-        }
-
-        final String[] values = value.split(",");
-        for(final String ngQuery: values) {
-            if(ngQuery.length() == 0) {
-                continue;
-            }
-            ngQueries.add(ngQuery);
-        }
-        return ngQueries;
-    }
-
 }

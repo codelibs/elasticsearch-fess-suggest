@@ -4,6 +4,7 @@ import static org.elasticsearch.rest.RestStatus.OK;
 
 import java.io.IOException;
 
+import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
@@ -22,12 +23,16 @@ public class FessSuggestCreateRestAction extends BaseRestHandler {
 
     protected final ThreadPool threadPool;
 
+    protected final FessSuggestService fessSuggestService;
+
     @Inject
     public FessSuggestCreateRestAction(final Settings settings, final Client client,
-                                       final RestController controller, final ThreadPool threadPool) {
+                                       final RestController controller, final ThreadPool threadPool, final FessSuggestService fessSuggestService) {
         super(settings, controller, client);
 
         this.threadPool = threadPool;
+
+        this.fessSuggestService = fessSuggestService;
 
         controller.registerHandler(RestRequest.Method.POST,
             "/{index}/_fsuggest/create", this);
@@ -40,7 +45,9 @@ public class FessSuggestCreateRestAction extends BaseRestHandler {
         threadPool.executor(ThreadPool.Names.SUGGEST).execute(() -> {
             try {
                 final String indexId = restRequest.param(PARAM_INDEX);
-                final Suggester suggester = Suggester.builder().build(client, indexId);
+
+                fessSuggestService.deleteSuggester(indexId);
+                final Suggester suggester = fessSuggestService.suggester(indexId);
                 final boolean created = suggester.createIndexIfNothing();
 
                 final XContentBuilder builder = JsonXContent.contentBuilder();
