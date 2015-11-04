@@ -11,6 +11,7 @@ Elasticsearch Fess Suggest Plugin provides flexible suggest feature.
 | Taste     | Tested on Elasticsearch |
 |:---------:|:-----------------------:|
 | master    | 1.7.X                   |
+| 1.7.2     | 1.7.1                   |
 
 Note that this plugin supports Java 8 or the above.
 
@@ -23,7 +24,7 @@ Please file an [issue](https://github.com/codelibs/elasticsearch-fess-suggest/is
 
 ### Install Fess Suggest Plugin
 
-    $ $ES_HOME/bin/plugin --install org.codelibs/elasticsearch-fess-suggest/1.7.0 # TBD
+    $ $ES_HOME/bin/plugin --install org.codelibs/elasticsearch-fess-suggest/1.7.2
 
 Fess Suggest plugin depends on [Elasticsearch Analysis Kuromoji Neologd](https://github.com/codelibs/elasticsearch-analysis-kuromoji-neologd "Elasticsearch Analysis Kuromoji Neologd").
 Please install elasticsearch-analysis-kuromoji-neologd.
