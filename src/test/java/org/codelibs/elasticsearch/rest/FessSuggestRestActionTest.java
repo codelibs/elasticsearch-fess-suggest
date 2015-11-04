@@ -115,7 +115,7 @@ public class FessSuggestRestActionTest {
     }
 
     @Test
-    public void test_famousKeys() throws Exception {
+    public void test_popularWords() throws Exception {
         final int docNum = 10;
 
         Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
@@ -129,7 +129,7 @@ public class FessSuggestRestActionTest {
         }
         runner.refresh();
 
-        CurlResponse response = Curl.get(runner.masterNode(), "fess/_famouskeys")
+        CurlResponse response = Curl.get(runner.masterNode(), "fess/_fsuggest/pwords")
             .execute();
         assertEquals(10, response.getContentAsMap().get("total"));
     }

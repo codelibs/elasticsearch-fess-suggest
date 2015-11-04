@@ -1,7 +1,7 @@
 package org.codelibs.elasticsearch;
 
 import org.codelibs.elasticsearch.module.FessSuggestModule;
-import org.codelibs.elasticsearch.rest.FamousKeysRestAction;
+import org.codelibs.elasticsearch.rest.PopularWordsRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestCreateRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestUpdateRestAction;
@@ -30,7 +30,7 @@ public class FessSuggestPlugin extends AbstractPlugin {
         module.addRestAction(FessSuggestRestAction.class);
         module.addRestAction(FessSuggestCreateRestAction.class);
         module.addRestAction(FessSuggestUpdateRestAction.class);
-        module.addRestAction(FamousKeysRestAction.class);
+        module.addRestAction(PopularWordsRestAction.class);
     }
 
     // for Service

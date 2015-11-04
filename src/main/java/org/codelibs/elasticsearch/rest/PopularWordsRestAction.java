@@ -19,7 +19,7 @@ import java.util.List;
 
 import static org.elasticsearch.rest.RestStatus.OK;
 
-public class FamousKeysRestAction extends BaseRestHandler {
+public class PopularWordsRestAction extends BaseRestHandler {
 
     public static final String PARAM_INDEX = "index";
     public static final String PARAM_WINDOW_SIZE = "window_size";
@@ -35,7 +35,7 @@ public class FamousKeysRestAction extends BaseRestHandler {
     protected final FessSuggestService fessSuggestService;
 
     @Inject
-    public FamousKeysRestAction(final Settings settings, final Client client,
+    public PopularWordsRestAction(final Settings settings, final Client client,
                                  final RestController controller, final ThreadPool threadPool, final FessSuggestService fessSuggestService) {
         super(settings, controller, client);
 
@@ -44,9 +44,9 @@ public class FamousKeysRestAction extends BaseRestHandler {
         this.fessSuggestService = fessSuggestService;
 
         controller.registerHandler(RestRequest.Method.GET,
-            "/{index}/_famouskeys", this);
+            "/{index}/_fsuggest/pwords", this);
         controller.registerHandler(RestRequest.Method.GET,
-            "/{index}/{type}/_famouskeys", this);
+            "/{index}/{type}/_fsuggest/pwords", this);
     }
 
     @Override
