@@ -4,7 +4,7 @@ import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.entity.SuggestItem;
 import org.codelibs.fess.suggest.exception.SuggesterException;
-import org.codelibs.fess.suggest.request.famouskeys.FamousKeysRequestBuilder;
+import org.codelibs.fess.suggest.request.popularwords.PopularWordsRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.common.inject.Inject;
@@ -62,27 +62,27 @@ public class PopularWordsRestAction extends BaseRestHandler {
                 final String fields = request.param(PARAM_FIELDS);
 
                 final Suggester suggester = fessSuggestService.suggester(index);
-                final FamousKeysRequestBuilder famousKeysRequestBuilder = suggester.famousKeys().setSize(size);
+                final PopularWordsRequestBuilder popularWordsRequestBuilder = suggester.popularWords().setSize(size).setWindowSize(windowSize);
                 if (!Strings.isNullOrEmpty(tags)) {
                     final String[] tagsArray = tags.split(SEP_PARAM);
                     for (final String tag : tagsArray) {
-                        famousKeysRequestBuilder.addTag(tag);
+                        popularWordsRequestBuilder.addTag(tag);
                     }
                 }
                 if (!Strings.isNullOrEmpty(roles)) {
                     final String[] rolesArray = roles.split(SEP_PARAM);
                     for (final String role : rolesArray) {
-                        famousKeysRequestBuilder.addRole(role);
+                        popularWordsRequestBuilder.addRole(role);
                     }
                 }
                 if (!Strings.isNullOrEmpty(fields)) {
                     final String[] fieldsArray = fields.split(SEP_PARAM);
                     for (final String field : fieldsArray) {
-                        famousKeysRequestBuilder.addRole(field);
+                        popularWordsRequestBuilder.addRole(field);
                     }
                 }
 
-                famousKeysRequestBuilder.execute()
+                popularWordsRequestBuilder.execute()
                     .done(r -> {
                         try {
                             final XContentBuilder builder = JsonXContent.contentBuilder();
