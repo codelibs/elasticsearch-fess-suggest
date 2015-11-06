@@ -27,6 +27,7 @@ public class PopularWordsRestAction extends BaseRestHandler {
     public static final String PARAM_TAGS = "tags";
     public static final String PARAM_ROLES = "roles";
     public static final String PARAM_FIELDS = "fields";
+    public static final String PARAM_SEED = "seed";
 
     private static final String SEP_PARAM = ",";
 
@@ -60,6 +61,7 @@ public class PopularWordsRestAction extends BaseRestHandler {
                 final String tags = request.param(PARAM_TAGS);
                 final String roles = request.param(PARAM_ROLES);
                 final String fields = request.param(PARAM_FIELDS);
+                final String seed = request.param(PARAM_SEED);
 
                 final Suggester suggester = fessSuggestService.suggester(index);
                 final PopularWordsRequestBuilder popularWordsRequestBuilder = suggester.popularWords().setSize(size).setWindowSize(windowSize);
@@ -80,6 +82,9 @@ public class PopularWordsRestAction extends BaseRestHandler {
                     for (final String field : fieldsArray) {
                         popularWordsRequestBuilder.addRole(field);
                     }
+                }
+                if (!Strings.isNullOrEmpty(seed)) {
+                    popularWordsRequestBuilder.setSeed(seed);
                 }
 
                 popularWordsRequestBuilder.execute()
