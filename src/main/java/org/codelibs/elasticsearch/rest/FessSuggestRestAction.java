@@ -175,7 +175,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
     }
 
     private Set<String> getNgQuerySet(final Settings settings) {
-        final Set<String> ngQueries = Collections.synchronizedSet(new HashSet<String>());
+        final Set<String> ngQueries = Collections.synchronizedSet(new HashSet<>());
         final String value = settings.get(SETTINGS_NGWORD_KEY);
         if(Strings.isNullOrEmpty(value)) {
             return ngQueries;

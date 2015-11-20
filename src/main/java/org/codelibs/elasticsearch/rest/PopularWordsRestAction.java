@@ -15,7 +15,10 @@ import org.elasticsearch.rest.*;
 import org.elasticsearch.threadpool.ThreadPool;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.elasticsearch.rest.RestStatus.OK;
 
@@ -28,12 +31,20 @@ public class PopularWordsRestAction extends BaseRestHandler {
     public static final String PARAM_ROLES = "roles";
     public static final String PARAM_FIELDS = "fields";
     public static final String PARAM_SEED = "seed";
+    public static final String PARAM_EXCLUDES = "excludes";
+
+    public static final String SETTINGS_EXCLUDE_WORDS = "fsuggest.pwords.excludes";
+    public static final String SETTINGS_WINDOW_SIZE = "fsuggest.pwords.window_size";
 
     private static final String SEP_PARAM = ",";
 
     protected final ThreadPool threadPool;
 
     protected final FessSuggestService fessSuggestService;
+
+    protected final Set<String> excludeWordSet;
+
+    protected final int windowSize;
 
     @Inject
     public PopularWordsRestAction(final Settings settings, final Client client,
@@ -48,6 +59,9 @@ public class PopularWordsRestAction extends BaseRestHandler {
             "/{index}/_fsuggest/pwords", this);
         controller.registerHandler(RestRequest.Method.GET,
             "/{index}/{type}/_fsuggest/pwords", this);
+
+        excludeWordSet = getExcludeWordSet(settings);
+        windowSize = settings.getAsInt(SETTINGS_WINDOW_SIZE, 20);
     }
 
     @Override
@@ -57,11 +71,12 @@ public class PopularWordsRestAction extends BaseRestHandler {
             try {
                 final String index = request.param(PARAM_INDEX);
                 final int size = request.paramAsInt(PARAM_SIZE, 10);
-                final int windowSize = request.paramAsInt(PARAM_WINDOW_SIZE, 20);
+                final int windowSize = request.paramAsInt(PARAM_WINDOW_SIZE, this.windowSize);
                 final String tags = request.param(PARAM_TAGS);
                 final String roles = request.param(PARAM_ROLES);
                 final String fields = request.param(PARAM_FIELDS);
                 final String seed = request.param(PARAM_SEED);
+                final String excludes = request.param(PARAM_EXCLUDES);
 
                 final Suggester suggester = fessSuggestService.suggester(index);
                 final PopularWordsRequestBuilder popularWordsRequestBuilder = suggester.popularWords().setSize(size).setWindowSize(windowSize);
@@ -85,6 +100,17 @@ public class PopularWordsRestAction extends BaseRestHandler {
                 }
                 if (!Strings.isNullOrEmpty(seed)) {
                     popularWordsRequestBuilder.setSeed(seed);
+                }
+                if (!Strings.isNullOrEmpty(excludes)) {
+                    final String[] excludesArray = excludes.split(SEP_PARAM);
+                    for (final String excludeWord : excludesArray) {
+                        popularWordsRequestBuilder.addExcludeWord(excludeWord);
+                    }
+                }
+                if(!excludeWordSet.isEmpty()) {
+                    for (final String excludeWord: excludeWordSet) {
+                        popularWordsRequestBuilder.addExcludeWord(excludeWord);
+                    }
                 }
 
                 popularWordsRequestBuilder.execute()
@@ -137,5 +163,22 @@ public class PopularWordsRestAction extends BaseRestHandler {
         } catch (final IOException e) {
             logger.error("Failed to send a failure response.", e);
         }
+    }
+
+    protected Set<String> getExcludeWordSet(final Settings settings) {
+        final Set<String> excludeWords = Collections.synchronizedSet(new HashSet<>());
+        final String value = settings.get(SETTINGS_EXCLUDE_WORDS);
+        if(Strings.isNullOrEmpty(value)) {
+            return excludeWords;
+        }
+
+        final String[] values = value.split(",");
+        for(final String excludeWord: values) {
+            if(excludeWord.length() == 0) {
+                continue;
+            }
+            excludeWords.add(excludeWord);
+        }
+        return excludeWords;
     }
 }
