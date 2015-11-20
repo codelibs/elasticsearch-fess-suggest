@@ -27,7 +27,7 @@
 	</parent>
 	<properties>
 		<elasticsearch.version>1.7.1</elasticsearch.version>
-		<fess_suggest.version>1.7.0-SNAPSHOT</fess_suggest.version>
+		<fess_suggest.version>1.7.0</fess_suggest.version>
 	</properties>
 	<repositories>
 		<repository>
