@@ -51,7 +51,7 @@ public class FessSuggestRestActionTest {
 
         Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
         for (int i = 0; i < docNum; i++) {
-            Curl.post(runner.masterNode(), "fess/_fsuggest/update").body(
+            Curl.post(runner.masterNode(), "fess/_fsuggest/update/searchword").body(
                 "{\n" +
                     "\"keyword\" : \"検索" + i + " エンジン" + "\",\n" +
                     "\"fields\" : [\"aaa\", \"bbb\"],\n" +
@@ -88,9 +88,39 @@ public class FessSuggestRestActionTest {
     }
 
     @Test
+    public void test_suggestFromDocument() throws Exception {
+        Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
+        Curl.post(runner.masterNode(), "fess/_fsuggest/update/document").body(
+            "{\n" +
+                "\"document\" : \"検索エンジンの仕組み。" + "\",\n" +
+                "\"fields\" : [\"aaa\", \"bbb\"],\n" +
+                "\"tags\" : [\"tag1\", \"tag2\"],\n" +
+                "\"roles\" : [\"role1\", \"role2\"]\n" +
+                "}"
+        ).execute();
+        runner.refresh();
+
+        CurlResponse response0 = Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "").param("roles", "role1").execute();
+        assertEquals(0, (int) response0.getContentAsMap().get("total"));
+
+        CurlResponse response1 = Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "検索").param("roles", "role1").execute();
+        assertEquals(1, (int) response1.getContentAsMap().get("total"));
+
+        CurlResponse response2= Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "検索エンジン").param("roles", "role1").execute();
+        assertEquals(1, (int) response2.getContentAsMap().get("total"));
+
+        CurlResponse response3= Curl.get(runner.masterNode(), "fess/_fsuggest")
+            .param("q", "仕組み").param("roles", "role1").execute();
+        assertEquals(1, (int) response3.getContentAsMap().get("total"));
+    }
+
+    @Test
     public void test_ngQuery() throws Exception {
         Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
-        Curl.post(runner.masterNode(), "fess/_fsuggest/update").body(
+        Curl.post(runner.masterNode(), "fess/_fsuggest/update/searchword").body(
             "{\n" +
                 "\"keyword\" : \"検索エンジン\",\n" +
                 "\"fields\" : [\"aaa\", \"bbb\"],\n" +
@@ -120,7 +150,7 @@ public class FessSuggestRestActionTest {
 
         Curl.post(runner.masterNode(), "fess/_fsuggest/create").execute();
         for (int i = 0; i < docNum; i++) {
-            Curl.post(runner.masterNode(), "fess/_fsuggest/update").body(
+            Curl.post(runner.masterNode(), "fess/_fsuggest/update/searchword").body(
                 "{\n" +
                     "\"keyword\" : \"検索" + i + "\",\n" +
                     "\"fields\" : [\"aaa\", \"bbb\"]\n" +
