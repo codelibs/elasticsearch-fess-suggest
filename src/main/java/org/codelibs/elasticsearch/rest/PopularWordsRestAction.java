@@ -1,12 +1,12 @@
 package org.codelibs.elasticsearch.rest;
 
+import com.google.common.base.Strings;
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.entity.SuggestItem;
 import org.codelibs.fess.suggest.exception.SuggesterException;
 import org.codelibs.fess.suggest.request.popularwords.PopularWordsRequestBuilder;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;

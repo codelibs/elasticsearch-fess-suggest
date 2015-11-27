@@ -1,20 +1,20 @@
 package org.codelibs.elasticsearch;
 
+import com.google.common.collect.Lists;
 import org.codelibs.elasticsearch.module.FessSuggestModule;
 import org.codelibs.elasticsearch.rest.PopularWordsRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestCreateRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestRestAction;
 import org.codelibs.elasticsearch.rest.FessSuggestUpdateRestAction;
 import org.codelibs.elasticsearch.service.FessSuggestService;
-import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.common.component.LifecycleComponent;
 import org.elasticsearch.common.inject.Module;
-import org.elasticsearch.plugins.AbstractPlugin;
+import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.rest.RestModule;
 
 import java.util.Collection;
 
-public class FessSuggestPlugin extends AbstractPlugin {
+public class FessSuggestPlugin extends Plugin {
     @Override
     public String name() {
         return "FessSuggestPlugin";
@@ -35,17 +35,17 @@ public class FessSuggestPlugin extends AbstractPlugin {
 
     // for Service
     @Override
-    public Collection<Class<? extends Module>> modules() {
-        final Collection<Class<? extends Module>> modules = Lists
+    public Collection<Module> nodeModules() {
+        final Collection<Module> modules = Lists
             .newArrayList();
-        modules.add(FessSuggestModule.class);
+        modules.add(new FessSuggestModule());
         return modules;
     }
 
     // for Service
     @SuppressWarnings("rawtypes")
     @Override
-    public Collection<Class<? extends LifecycleComponent>> services() {
+    public Collection<Class<? extends LifecycleComponent>> nodeServices() {
         final Collection<Class<? extends LifecycleComponent>> services = Lists
             .newArrayList();
         services.add(FessSuggestService.class);

@@ -10,13 +10,13 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import com.google.common.base.Strings;
 import org.codelibs.elasticsearch.ElasticsearchFessSuggestException;
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.core.lang.StringUtil;
 import org.codelibs.fess.suggest.index.SuggestIndexResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -64,7 +64,7 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
                 final String source = restRequest.content().toUtf8();
                 final Map<String, Object> requestMap = XContentFactory
                     .xContent(source)
-                    .createParser(source).mapAndClose();
+                    .createParser(source).map();
 
                 final String[] fields;
                 final String[] tags;

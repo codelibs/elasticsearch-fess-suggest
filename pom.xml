@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codelibs</groupId>
 	<artifactId>elasticsearch-fess-suggest</artifactId>
-	<version>1.7.5-SNAPSHOT</version>
+	<version>2.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<description>elasticsearch elasticsearch-fess-suggest plugin</description>
 	<inceptionYear>2015</inceptionYear>
@@ -26,8 +26,8 @@
 		<version>9</version>
 	</parent>
 	<properties>
-		<elasticsearch.version>1.7.1</elasticsearch.version>
-		<fess_suggest.version>1.7.0</fess_suggest.version>
+		<elasticsearch.version>2.0.1</elasticsearch.version>
+		<fess_suggest.version>2.0.0</fess_suggest.version>
 	</properties>
 	<repositories>
 		<repository>
@@ -114,12 +114,14 @@
 			<artifactId>fess-suggest</artifactId>
 			<version>${fess_suggest.version}</version>
 		</dependency>
+		<!--
 		<dependency>
 			<groupId>org.codelibs</groupId>
 			<artifactId>lucene-analyzers-kuromoji-ipadic-neologd</artifactId>
 			<version>4.10.4-20150501</version>
 			<scope>provided</scope>
 		</dependency>
+		-->
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
@@ -129,13 +131,25 @@
 		<dependency>
 			<groupId>org.codelibs</groupId>
 			<artifactId>elasticsearch-cluster-runner</artifactId>
-			<version>1.7.0.0</version>
+			<version>2.0.0.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.codelibs</groupId>
 			<artifactId>elasticsearch-analysis-kuromoji-neologd</artifactId>
-			<version>1.7.1</version>
+			<version>2.0.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>4.1.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
