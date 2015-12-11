@@ -119,7 +119,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
                 }
 
                 suggestRequestBuilder.execute()
-                    .done(r -> {
+                    .then(r -> {
                         try {
                             final XContentBuilder builder = JsonXContent.contentBuilder();
                             final String pretty = request.param("pretty");

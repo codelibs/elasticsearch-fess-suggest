@@ -114,7 +114,7 @@ public class PopularWordsRestAction extends BaseRestHandler {
                 }
 
                 popularWordsRequestBuilder.execute()
-                    .done(r -> {
+                    .then(r -> {
                         try {
                             final XContentBuilder builder = JsonXContent.contentBuilder();
                             final String pretty = request.param("pretty");
