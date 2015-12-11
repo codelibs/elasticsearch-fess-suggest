@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codelibs</groupId>
 	<artifactId>elasticsearch-fess-suggest</artifactId>
-	<version>1.7.5</version>
+	<version>1.7.6-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<description>elasticsearch elasticsearch-fess-suggest plugin</description>
 	<inceptionYear>2015</inceptionYear>
