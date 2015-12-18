@@ -28,6 +28,9 @@
 	<properties>
 		<elasticsearch.version>2.1.0</elasticsearch.version>
 		<fess_suggest.version>2.1.0-SNAPSHOT</fess_suggest.version>
+		<elasticsearch.plugin.classname>org.codelibs.elasticsearch.FessSuggestPlugin</elasticsearch.plugin.classname>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<repositories>
 		<repository>
@@ -56,8 +59,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.2</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
 			<plugin>
