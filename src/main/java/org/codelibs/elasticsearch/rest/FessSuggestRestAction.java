@@ -9,12 +9,17 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Strings;
+
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
 import org.codelibs.fess.suggest.entity.SuggestItem;
 import org.codelibs.fess.suggest.exception.SuggesterException;
 import org.codelibs.fess.suggest.request.suggest.SuggestRequestBuilder;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.ClusterService;
+import org.elasticsearch.cluster.metadata.AliasOrIndex;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -27,6 +32,8 @@ import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.threadpool.ThreadPool;
 
 public class FessSuggestRestAction extends BaseRestHandler {
+
+    public static final String INDEX_PREFIX_MATCH_WEIGHT = "index.suggest.prefix_match_weight";
 
     public static final String PARAM_INDEX = "index";
     public static final String PARAM_QUERY = "q";
@@ -41,18 +48,21 @@ public class FessSuggestRestAction extends BaseRestHandler {
 
     protected final ThreadPool threadPool;
 
-    protected final Set<String> ngQueries;
+    protected final Set<String> badQueries;
 
     protected final FessSuggestService fessSuggestService;
 
+    protected final ClusterService clusterService;
+
     @Inject
-    public FessSuggestRestAction(final Settings settings, final Client client,
-            final RestController controller, final ThreadPool threadPool, final FessSuggestService fessSuggestService) {
+    public FessSuggestRestAction(final Settings settings, final Client client, final RestController controller, final ThreadPool threadPool,
+            final ClusterService clusterService, final FessSuggestService fessSuggestService) {
         super(settings, controller, client);
 
         this.threadPool = threadPool;
+        this.clusterService = clusterService;
 
-        this.ngQueries = getNgQuerySet(settings);
+        this.badQueries = getBadQuerySet(settings);
 
         this.fessSuggestService = fessSuggestService;
 
@@ -74,7 +84,7 @@ public class FessSuggestRestAction extends BaseRestHandler {
                 final String roles = request.param(PARAM_ROLES);
                 final String fields = request.param(PARAM_FIELDS);
 
-                if(Strings.isNullOrEmpty(query) || isNgQuery(query)) {
+                if(Strings.isNullOrEmpty(query) || isBadQuery(query)) {
                     try {
                         final XContentBuilder builder = JsonXContent.contentBuilder();
                         final String pretty = request.param("pretty");
@@ -117,7 +127,21 @@ public class FessSuggestRestAction extends BaseRestHandler {
                         suggestRequestBuilder.addField(field);
                     }
                 }
-
+                final MetaData metaData = clusterService.state().getMetaData();
+                final AliasOrIndex aliasOrIndex = metaData.getAliasAndIndexLookup().get(index);
+                if (aliasOrIndex != null) {
+                    float weight = 0;
+                    for (IndexMetaData indexMD : aliasOrIndex.getIndices()) {
+                        final Settings scriptSettings = indexMD.getSettings();
+                        final float value = scriptSettings.getAsFloat(INDEX_PREFIX_MATCH_WEIGHT, 0f);
+                        if (value > weight) {
+                            weight = value;
+                        }
+                    }
+                    if (weight > 0) {
+                        suggestRequestBuilder.setPrefixMatchWeight(weight);
+                    }
+                }
                 suggestRequestBuilder.execute()
                     .then(r -> {
                         try {
@@ -170,25 +194,25 @@ public class FessSuggestRestAction extends BaseRestHandler {
         }
     }
 
-    private boolean isNgQuery(final String query) {
-        return ngQueries.contains(query);
+    private boolean isBadQuery(final String query) {
+        return badQueries.contains(query);
     }
 
-    private Set<String> getNgQuerySet(final Settings settings) {
-        final Set<String> ngQueries = Collections.synchronizedSet(new HashSet<>());
+    private Set<String> getBadQuerySet(final Settings settings) {
+        final Set<String> badQueries = Collections.synchronizedSet(new HashSet<>());
         final String value = settings.get(SETTINGS_NGWORD_KEY);
         if(Strings.isNullOrEmpty(value)) {
-            return ngQueries;
+            return badQueries;
         }
 
         final String[] values = value.split(",");
-        for(final String ngQuery: values) {
-            if(ngQuery.length() == 0) {
+        for(final String badQuery: values) {
+            if(badQuery.length() == 0) {
                 continue;
             }
-            ngQueries.add(ngQuery);
+            badQueries.add(badQuery);
         }
-        return ngQueries;
+        return badQueries;
     }
 
 }
