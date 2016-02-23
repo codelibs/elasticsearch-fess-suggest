@@ -27,7 +27,7 @@
 	</parent>
 	<properties>
 		<elasticsearch.version>2.1.1</elasticsearch.version>
-		<fess_suggest.version>2.1.3-SNAPSHOT</fess_suggest.version>
+		<fess_suggest.version>2.1.3</fess_suggest.version>
 		<elasticsearch.plugin.classname>org.codelibs.elasticsearch.FessSuggestPlugin</elasticsearch.plugin.classname>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
