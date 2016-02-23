@@ -21,6 +21,7 @@ public class FessSuggestRestActionTest {
         runner = new ElasticsearchClusterRunner();
         runner.onBuild((number, settingsBuilder) -> {
             settingsBuilder.put("http.cors.enabled", true);
+            settingsBuilder.put("http.cors.allow-origin", "*");
             settingsBuilder.put("index.number_of_shards", 1);
             settingsBuilder.put("index.number_of_replicas", 0);
             settingsBuilder.putArray("discovery.zen.ping.unicast.hosts", "localhost:9301-9399");
@@ -161,7 +162,7 @@ public class FessSuggestRestActionTest {
         }
         runner.refresh();
 
-        CurlResponse response = Curl.get(runner.masterNode(), "fess/_fsuggest/pwords")
+        CurlResponse response = Curl.get(runner.masterNode(), "fess/_fsuggest/pwords?query_freq=0")
             .execute();
         assertEquals(10, response.getContentAsMap().get("total"));
     }

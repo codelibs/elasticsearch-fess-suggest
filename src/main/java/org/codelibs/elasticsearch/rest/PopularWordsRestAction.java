@@ -32,6 +32,7 @@ public class PopularWordsRestAction extends BaseRestHandler {
     public static final String PARAM_FIELDS = "fields";
     public static final String PARAM_SEED = "seed";
     public static final String PARAM_EXCLUDES = "excludes";
+    public static final String PARAM_QUERY_FREQ = "query_freq";
 
     public static final String SETTINGS_EXCLUDE_WORDS = "fsuggest.pwords.excludes";
     public static final String SETTINGS_WINDOW_SIZE = "fsuggest.pwords.window_size";
@@ -77,6 +78,7 @@ public class PopularWordsRestAction extends BaseRestHandler {
                 final String fields = request.param(PARAM_FIELDS);
                 final String seed = request.param(PARAM_SEED);
                 final String excludes = request.param(PARAM_EXCLUDES);
+                final int queryFreqThreshold = request.paramAsInt(PARAM_QUERY_FREQ, 10);
 
                 final Suggester suggester = fessSuggestService.suggester(index);
                 final PopularWordsRequestBuilder popularWordsRequestBuilder = suggester.popularWords().setSize(size).setWindowSize(windowSize);
@@ -112,6 +114,7 @@ public class PopularWordsRestAction extends BaseRestHandler {
                         popularWordsRequestBuilder.addExcludeWord(excludeWord);
                     }
                 }
+                popularWordsRequestBuilder.setQueryFreqThreshold(queryFreqThreshold);
 
                 popularWordsRequestBuilder.execute()
                     .then(r -> {
