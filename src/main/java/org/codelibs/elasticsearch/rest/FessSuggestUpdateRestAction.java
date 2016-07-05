@@ -11,10 +11,10 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import com.google.common.base.Strings;
+import org.codelibs.core.lang.StringUtil;
 import org.codelibs.elasticsearch.ElasticsearchFessSuggestException;
 import org.codelibs.elasticsearch.service.FessSuggestService;
 import org.codelibs.fess.suggest.Suggester;
-import org.codelibs.fess.suggest.core.lang.StringUtil;
 import org.codelibs.fess.suggest.index.SuggestIndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
