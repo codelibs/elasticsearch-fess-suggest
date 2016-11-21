@@ -26,8 +26,8 @@
 		<version>9</version>
 	</parent>
 	<properties>
-		<elasticsearch.version>2.3.3</elasticsearch.version>
-		<fess_suggest.version>2.3.0-SNAPSHOT</fess_suggest.version>
+		<elasticsearch.version>2.3.5</elasticsearch.version>
+		<fess_suggest.version>2.3.1</fess_suggest.version>
 		<elasticsearch.plugin.classname>org.codelibs.elasticsearch.FessSuggestPlugin</elasticsearch.plugin.classname>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -117,14 +117,6 @@
 			<artifactId>fess-suggest</artifactId>
 			<version>${fess_suggest.version}</version>
 		</dependency>
-		<!--
-		<dependency>
-			<groupId>org.codelibs</groupId>
-			<artifactId>lucene-analyzers-kuromoji-ipadic-neologd</artifactId>
-			<version>4.10.4-20150501</version>
-			<scope>provided</scope>
-		</dependency>
-		-->
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>

@@ -69,6 +69,7 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
                 final String[] fields;
                 final String[] tags;
                 final String[] roles;
+                final String[] langs;
 
                 final Object fieldsObj = requestMap.get("fields");
                 if (fieldsObj instanceof List) {
@@ -89,6 +90,13 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
                     roles = ((List<String>) rolesObj).stream().toArray(n -> new String[n]);
                 } else {
                     roles = StringUtil.EMPTY_STRINGS;
+                }
+
+                final Object langsObj = requestMap.get("langs");
+                if (langsObj instanceof List) {
+                    langs = ((List<String>) langsObj).stream().toArray(n -> new String[n]);
+                } else {
+                    langs = StringUtil.EMPTY_STRINGS;
                 }
 
 
@@ -112,7 +120,7 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
                 final Consumer<Throwable> error = t -> sendErrorResponse(restChannel, t);
 
                 if(updateType.equals("searchword")) {
-                    updateFromSearchWord(suggester, fields, tags, roles, requestMap, success, error);
+                    updateFromSearchWord(suggester, fields, tags, roles, langs, requestMap, success, error);
                 } else if (updateType.equals("document")) {
                     updateFromDocument(suggester, fields, tags, roles, requestMap, success, error);
                 } else {
@@ -124,7 +132,7 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
         });
     }
 
-    private void updateFromSearchWord(final Suggester suggester, final String[] fields, final String[] tags, final String roles[],
+    private void updateFromSearchWord(final Suggester suggester, final String[] fields, final String[] tags, final String roles[], final String langs[],
                                     final Map<String, Object> requestMap, final Consumer<SuggestIndexResponse> success, final Consumer<Throwable> error) {
         final Object keyword = requestMap.getOrDefault("keyword", "");
         if (Strings.isNullOrEmpty(keyword.toString())) {
@@ -139,7 +147,8 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
                     fields,
                     tags,
                     roles,
-                    1);
+                    1,
+                    langs);
 
             success.accept(suggestIndexResponse);
         } catch (Exception e) {
@@ -165,7 +174,7 @@ public class FessSuggestUpdateRestAction extends BaseRestHandler {
 
             Stream.of(fields).forEach(field -> doc.put(field, document));
 
-            //TODO tags & role
+            //TODO tags, role and langs
             final SuggestIndexResponse suggestIndexResponse = suggester.indexer().indexFromDocument(new Map[]{doc});
             success.accept(suggestIndexResponse);
         } catch (Exception e) {
